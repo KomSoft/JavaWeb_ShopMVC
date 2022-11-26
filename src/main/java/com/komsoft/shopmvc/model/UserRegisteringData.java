@@ -1,6 +1,7 @@
 package com.komsoft.shopmvc.model;
 
 import com.komsoft.shopmvc.util.Encoding;
+import org.springframework.security.crypto.bcrypt.BCrypt;
 
 public class UserRegisteringData {
     private final String login;
@@ -13,7 +14,11 @@ public class UserRegisteringData {
     private String savedPassword;
 //    Це збочення, але поки так. Щоб не видавати дійсний пароль та була можливість порівняти
 //    два хешованих пароля, сюди зберігаємо пароль з бази. Таким чином дійсний пароль назовні
-//    не вийде, і не можна буде записати відкритий пароль в базу, бо видаватись буде  encryptedPassword
+//    не вийде, і не можна буде записати відкритий пароль в базу, бо видаватись буде encryptedPassword
+//    Тобто якщо ми прочитали користувача з бази, то отримати його зашифрований пароль можна лише
+//    після виклику метода isPasswordCorrect(String candidatePassword), якщо candidatePassword буде вірним
+//    Після успішного виклику метода збережений пароль з'явиться в encryptedPassword,
+//    інакше getEncryptedPassword() буде повертати null
 
     public UserRegisteringData(String login, String password, String fullName, String region, String gender, String comment) {
         this.login = login;
@@ -62,23 +67,25 @@ public class UserRegisteringData {
     }
 
     public static String encryptPassword(String password) {
-//        return Encoding.bCryptEncryption(password);
-        return Encoding.md5EncryptionWithSalt(password);
+//        return Encoding.md5EncryptionWithSalt(password);
+        return Encoding.bCryptEncryption(password);
     }
 
-    public boolean isPasswordsEquals() {
+//  Compare savedPassword with encryptedPassword. Call only after isPasswordCorrect(String candidatePassword)
+//    Can use to check if user has all fields correct
+    public boolean isPasswordCorrect() {
         return (this.encryptedPassword != null && this.encryptedPassword.equals(savedPassword));
     }
 
+//  Compare savedPassword with candidate using encryption rules
     public boolean isPasswordCorrect(String candidatePassword) {
-        if (encryptPassword(candidatePassword).equals(savedPassword)) {
-//      TODO   for BCrypt - not checked yet
-//        if (BCrypt.checkpw(candidatePassword, this.savedPassword)) {
+        boolean isEquals;
+//      isEquals = encryptPassword(candidatePassword).equals(savedPassword);    //      for MD5 encryprion
+        isEquals = BCrypt.checkpw(candidatePassword, this.savedPassword);       //      for BCrypt
+        if (isEquals) {
             this.encryptedPassword = savedPassword;
-            return true;
-        } else {
-            return false;
         }
+        return isEquals;
     }
 
 }

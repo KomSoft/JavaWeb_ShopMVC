@@ -1,5 +1,7 @@
 package com.komsoft.shopmvc.util;
 
+import org.springframework.security.crypto.bcrypt.BCrypt;
+
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -8,7 +10,7 @@ import java.util.logging.Logger;
 
 public class Encoding {
     private static final String SALT = "com.itea";
-//    private static final String BCRYPT_SALT = BCrypt.gensalt(13);
+    private static final String BCRYPT_SALT = BCrypt.gensalt(13);
     static Logger logger = Logger.getLogger(Encoding.class.getName());
 
     private static String getHashFromDigest(byte[] bytes) {
@@ -43,11 +45,9 @@ public class Encoding {
         return result;
     }
 
-/*
     public static String bCryptEncryption(String inputData) {
         return BCrypt.hashpw(inputData, BCRYPT_SALT);
     }
-*/
 
     public static String md5EncryptionWithSalt(String inputData) {
         return md5Encryption(inputData + SALT);

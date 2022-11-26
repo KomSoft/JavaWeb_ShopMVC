@@ -29,7 +29,7 @@ public class BlockedLogin extends HttpServlet {
     RequestDispatcher dispatcher = null;
 
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         response.setContentType("text/html");
         String url = "";
         if (endTime != null) {
@@ -45,12 +45,17 @@ public class BlockedLogin extends HttpServlet {
         if (count < MAX_TRY) {
             String login = request.getParameter("login");
             String password = request.getParameter("password");
+            String fullName;
             if (login != null && login.trim().length() != 0) {      // isBlank() is not supported
                 try {
                     UserRepository userRepository = new UserRepository(new PostgreSQLJDBC());
-                    String fullName = userRepository.getFullNameByLoginAndPassword(login, UserRegisteringData.encryptPassword(password));
+//                  without using BCrypt can use this way
+//                    fullName = userRepository.getFullNameByLoginAndPassword(login, UserRegisteringData.encryptPassword(password));
+//                    if (fullName != null) {
+                    UserRegisteringData user = userRepository.getUserByLogin(login);
                     userRepository.closeConnection();
-                    if (fullName != null) {
+                    if (user != null && user.isPasswordCorrect(password)) {
+                        fullName = user.getFullName();
                         request.setAttribute(Header.MESSAGE, String.format(bundle.getString("accessGranted"), fullName));
                         request.getSession().setAttribute(Header.AUTHENTICATED_USER_KEY, fullName);
                         Header.setLogoutMenu(request.getSession());
